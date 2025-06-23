@@ -10,7 +10,7 @@
       text-align: center;
       margin: 30px;
     }
-    #question, #answer-buttons, #result-table, #timer {
+    #question, #answer-buttons, #result-table, #timer, #history-section {
       display: none;
       margin-top: 20px;
     }
@@ -27,6 +27,10 @@
       font-size: 18px;
       margin: 10px;
     }
+    .selected {
+      background-color: #4CAF50;
+      color: white;
+    }
     table {
       margin: 20px auto;
       border-collapse: collapse;
@@ -38,7 +42,7 @@
     #back-button {
       margin-top: 20px;
     }
-    .grade-buttons button {
+    .user-buttons button, .grade-buttons button {
       padding: 10px 15px;
       font-size: 16px;
       margin: 5px;
@@ -48,16 +52,24 @@
 <body>
   <h1>こども計算クイズ</h1>
   <div id="start-screen">
+    <p>ユーザーを選んでね：</p>
+    <div class="user-buttons">
+      <button onclick="selectUser('はると')" id="user-haruto">はると</button>
+      <button onclick="selectUser('ひまり')" id="user-himari">ひまり</button>
+    </div>
+
     <p>学年を選んでね：</p>
     <div class="grade-buttons">
-      <button onclick="selectGrade('小1')">小1</button>
-      <button onclick="selectGrade('小2')">小2</button>
-      <button onclick="selectGrade('小3')">小3</button>
-      <button onclick="selectGrade('小4')">小4</button>
-      <button onclick="selectGrade('小5')">小5</button>
-      <button onclick="selectGrade('小6')">小6</button>
+      <button onclick="selectGrade('小1')" id="grade-小1">小1</button>
+      <button onclick="selectGrade('小2')" id="grade-小2">小2</button>
+      <button onclick="selectGrade('小3')" id="grade-小3">小3</button>
+      <button onclick="selectGrade('小4')" id="grade-小4">小4</button>
+      <button onclick="selectGrade('小5')" id="grade-小5">小5</button>
+      <button onclick="selectGrade('小6')" id="grade-小6">小6</button>
     </div>
+
     <button onclick="startGame()">スタート</button>
+    <button onclick="showHistory()">学習履歴を見る</button>
   </div>
 
   <div id="timer">タイマー: <span id="time">0</span> 秒</div>
@@ -83,168 +95,62 @@
     </div>
   </div>
 
+  <div id="history-section">
+    <h2 id="history-title"></h2>
+    <table>
+      <thead>
+        <tr><th>日付</th><th>学年</th><th>正答数</th><th>時間</th></tr>
+      </thead>
+      <tbody id="history-body"></tbody>
+    </table>
+    <div id="back-button">
+      <button onclick="resetGame()">スタート画面に戻る</button>
+    </div>
+  </div>
+
   <script>
     let selectedGrade = '小1';
+    let selectedUser = 'はると';
 
     function selectGrade(grade) {
       selectedGrade = grade;
+      document.querySelectorAll('.grade-buttons button').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById(`grade-${grade}`).classList.add('selected');
     }
 
-    function generateProblems(grade) {
-      const problems = [];
-      const add = (a, b) => `${a} + ${b}`;
-      const sub = (a, b) => `${a} - ${b}`;
-      const mul = (a, b) => `${a} × ${b}`;
-      const div = (a, b) => `${a * b} ÷ ${b}`;
-      const decimal = () => `${(Math.random() * 10).toFixed(1)} + ${(Math.random() * 10).toFixed(1)}`;
-      const fraction = () => `${[1,2,3,4][Math.floor(Math.random()*4)]}/[1,2,3,4][Math.floor(Math.random()*4)] × ${Math.floor(Math.random()*9+1)}`;
-
-      if (grade === '小1') {
-        for (let i = 1; i <= 20; i++) {
-          for (let j = 1; j <= 20; j++) {
-            if (i + j <= 20) problems.push({ expression: add(i, j), answer: i + j });
-            if (i - j >= 0) problems.push({ expression: sub(i, j), answer: i - j });
-          }
-        }
-      } else if (grade === '小2') {
-        for (let i = 1; i <= 20; i++) {
-          for (let j = 1; j <= 20; j++) {
-            problems.push({ expression: add(i, j), answer: i + j });
-            problems.push({ expression: sub(i, j), answer: i - j });
-          }
-        }
-        for (let i = 1; i <= 9; i++) {
-          for (let j = 1; j <= 9; j++) {
-            problems.push({ expression: mul(i, j), answer: i * j });
-          }
-        }
-      } else if (grade === '小3') {
-        for (let i = 1; i <= 100; i++) {
-          for (let j = 1; j <= 100; j++) {
-            problems.push({ expression: add(i, j), answer: i + j });
-            problems.push({ expression: sub(i, j), answer: i - j });
-          }
-        }
-        for (let i = 1; i <= 12; i++) {
-          for (let j = 1; j <= 12; j++) {
-            problems.push({ expression: mul(i, j), answer: i * j });
-          }
-        }
-        for (let i = 1; i <= 12; i++) {
-          for (let j = 1; j <= 12; j++) {
-            problems.push({ expression: div(i, j), answer: i });
-          }
-        }
-      } else if (grade === '小4') {
-        for (let i = 100; i <= 999; i+=10) {
-          for (let j = 1; j <= 10; j++) {
-            problems.push({ expression: add(i, j), answer: i + j });
-            problems.push({ expression: sub(i, j), answer: i - j });
-            problems.push({ expression: mul(i, j), answer: i * j });
-            problems.push({ expression: div(i, j), answer: i });
-          }
-        }
-      } else if (grade === '小5') {
-        for (let i = 0; i < 50; i++) {
-          const a = (Math.random() * 10).toFixed(1);
-          const b = (Math.random() * 10).toFixed(1);
-          problems.push({ expression: `${a} + ${b}`, answer: (parseFloat(a) + parseFloat(b)).toFixed(1) });
-        }
-      } else if (grade === '小6') {
-        for (let i = 1; i <= 10; i++) {
-          const a = i * 5;
-          const b = i;
-          problems.push({ expression: `${a} ÷ ${b}`, answer: a / b });
-          problems.push({ expression: `${i}/5 × ${b}`, answer: (i/5)*b });
-        }
-      }
-
-      return problems;
+    function selectUser(user) {
+      selectedUser = user;
+      document.querySelectorAll('.user-buttons button').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById(`user-${user}`).classList.add('selected');
     }
 
-    let questions = [];
-    let current = 0;
-    let startTime;
-    let timerInterval;
-    let timeElapsed = 0;
-    let results = [];
+    function saveHistory(user, grade, correct, total, time) {
+      const key = `history-${user}`;
+      const history = JSON.parse(localStorage.getItem(key)) || [];
+      history.unshift({
+        date: new Date().toLocaleDateString(),
+        grade: grade,
+        correct: correct,
+        total: total,
+        time: `${time}秒`
+      });
+      localStorage.setItem(key, JSON.stringify(history));
+    }
 
-    function startGame() {
-      questions = shuffleArray(generateProblems(selectedGrade)).slice(0, 10);
-      current = 0;
-      results = [];
-      timeElapsed = 0;
+    function showHistory() {
       document.getElementById('start-screen').style.display = 'none';
-      document.getElementById('timer').style.display = 'block';
-      document.getElementById('question').style.display = 'block';
-      document.getElementById('answer-buttons').style.display = 'block';
-      document.getElementById('result-table').style.display = 'none';
-      document.getElementById('results').innerHTML = '';
-      startTime = Date.now();
-      timerInterval = setInterval(updateTimer, 100);
-      showQuestion();
-    }
-
-    function updateTimer() {
-      const now = Date.now();
-      timeElapsed = ((now - startTime) / 1000).toFixed(1);
-      document.getElementById('time').textContent = timeElapsed;
-    }
-
-    function showQuestion() {
-      const q = questions[current];
-      const isCorrect = Math.random() < 0.8; // 80%正解にしておく
-      const shownAnswer = isCorrect ? q.answer : q.answer + Math.floor(Math.random() * 5 + 1);
-      q.shown = `${q.expression} = ${shownAnswer}`;
-      q.isActuallyCorrect = (shownAnswer == q.answer);
-      document.getElementById('question-number').textContent = `問題 ${current + 1}`;
-      document.getElementById('question-expression').textContent = q.shown;
-    }
-
-    function submitAnswer(userSaysCorrect) {
-      const q = questions[current];
-      const result = {
-        number: current + 1,
-        expression: q.shown,
-        correctAnswer: q.answer,
-        time: timeElapsed,
-        correct: (userSaysCorrect === q.isActuallyCorrect)
-      };
-      results.push(result);
-      current++;
-      if (current < 10) {
-        showQuestion();
-      } else {
-        endGame();
-      }
-    }
-
-    function endGame() {
-      clearInterval(timerInterval);
-      document.getElementById('timer').style.display = 'none';
-      document.getElementById('question').style.display = 'none';
-      document.getElementById('answer-buttons').style.display = 'none';
-      document.getElementById('result-table').style.display = 'block';
-
-      const tbody = document.getElementById('results');
-      results.forEach(r => {
+      document.getElementById('history-section').style.display = 'block';
+      const key = `history-${selectedUser}`;
+      const history = JSON.parse(localStorage.getItem(key)) || [];
+      const tbody = document.getElementById('history-body');
+      const title = document.getElementById('history-title');
+      title.textContent = `${selectedUser} の学習履歴`;
+      tbody.innerHTML = '';
+      history.forEach(r => {
         const row = document.createElement('tr');
-        row.innerHTML = `<td>${r.number}</td><td>${r.expression}</td><td>${r.correctAnswer}</td><td>${r.time}</td><td>${r.correct ? '〇' : '×'}</td>`;
+        row.innerHTML = `<td>${r.date}</td><td>${r.grade}</td><td>${r.correct}/${r.total}</td><td>${r.time}</td>`;
         tbody.appendChild(row);
       });
-    }
-
-    function resetGame() {
-      document.getElementById('start-screen').style.display = 'block';
-      document.getElementById('result-table').style.display = 'none';
-    }
-
-    function shuffleArray(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
     }
   </script>
 </body>
