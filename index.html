@@ -54,8 +54,8 @@
   <div id="start-screen">
     <p>ユーザーを選んでね：</p>
     <div class="user-buttons">
-      <button onclick="selectUser('はると')" id="user-haruto">はると</button>
-      <button onclick="selectUser('ひまり')" id="user-himari">ひまり</button>
+      <button onclick="selectUser('はると')" id="user-はると">はると</button>
+      <button onclick="selectUser('ひまり')" id="user-ひまり">ひまり</button>
     </div>
 
     <p>学年を選んでね：</p>
@@ -140,6 +140,10 @@
     function showHistory() {
       document.getElementById('start-screen').style.display = 'none';
       document.getElementById('history-section').style.display = 'block';
+      document.getElementById('result-table').style.display = 'none';
+      document.getElementById('question').style.display = 'none';
+      document.getElementById('timer').style.display = 'none';
+      document.getElementById('answer-buttons').style.display = 'none';
       const key = `history-${selectedUser}`;
       const history = JSON.parse(localStorage.getItem(key)) || [];
       const tbody = document.getElementById('history-body');
@@ -151,6 +155,15 @@
         row.innerHTML = `<td>${r.date}</td><td>${r.grade}</td><td>${r.correct}/${r.total}</td><td>${r.time}</td>`;
         tbody.appendChild(row);
       });
+    }
+
+    function resetGame() {
+      document.getElementById('start-screen').style.display = 'block';
+      document.getElementById('result-table').style.display = 'none';
+      document.getElementById('history-section').style.display = 'none';
+      document.getElementById('question').style.display = 'none';
+      document.getElementById('timer').style.display = 'none';
+      document.getElementById('answer-buttons').style.display = 'none';
     }
   </script>
 </body>
