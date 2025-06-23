@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>こども計算クイズ</title>
+  <title>こども学習クイズ</title>
   <style>
     body {
       font-family: sans-serif;
@@ -19,7 +19,7 @@
       margin-bottom: 5px;
     }
     #question .expression {
-      font-size: 36px;
+      font-size: 48px;
       font-weight: bold;
     }
     button {
@@ -42,7 +42,7 @@
     #back-button {
       margin-top: 20px;
     }
-    .user-buttons button, .grade-buttons button {
+    .user-buttons button, .grade-buttons button, .mode-buttons button {
       padding: 10px 15px;
       font-size: 16px;
       margin: 5px;
@@ -50,12 +50,18 @@
   </style>
 </head>
 <body>
-  <h1>こども計算クイズ</h1>
+  <h1>こども学習クイズ</h1>
   <div id="start-screen">
     <p>ユーザーを選んでね：</p>
     <div class="user-buttons">
       <button onclick="selectUser('はると')" id="user-はると">はると</button>
       <button onclick="selectUser('ひまり')" id="user-ひまり">ひまり</button>
+    </div>
+
+    <p>教科を選んでね：</p>
+    <div class="mode-buttons">
+      <button onclick="selectMode('math')" id="mode-math">算数</button>
+      <button onclick="selectMode('kanji')" id="mode-kanji">漢字</button>
     </div>
 
     <p>学年を選んでね：</p>
@@ -111,6 +117,7 @@
   <script>
     let selectedGrade = '小1';
     let selectedUser = 'はると';
+    let selectedMode = 'math';
 
     function selectGrade(grade) {
       selectedGrade = grade;
@@ -122,6 +129,12 @@
       selectedUser = user;
       document.querySelectorAll('.user-buttons button').forEach(btn => btn.classList.remove('selected'));
       document.getElementById(`user-${user}`).classList.add('selected');
+    }
+
+    function selectMode(mode) {
+      selectedMode = mode;
+      document.querySelectorAll('.mode-buttons button').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById(`mode-${mode}`).classList.add('selected');
     }
 
     function saveHistory(user, grade, correct, total, time) {
