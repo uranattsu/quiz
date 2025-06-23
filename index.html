@@ -5,47 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>こども学習クイズ</title>
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      margin: 30px;
-    }
+    body { font-family: sans-serif; text-align: center; margin: 30px; }
     #question, #answer-buttons, #result-table, #timer, #history-section {
-      display: none;
-      margin-top: 20px;
+      display: none; margin-top: 20px;
     }
-    #question .number {
-      font-size: 20px;
-      margin-bottom: 5px;
-    }
-    #question .expression {
-      font-size: 48px;
-      font-weight: bold;
-    }
+    #question .number { font-size: 20px; margin-bottom: 5px; }
+    #question .expression { font-size: 48px; font-weight: bold; }
     button {
-      padding: 10px 20px;
-      font-size: 18px;
-      margin: 10px;
+      padding: 10px 20px; font-size: 18px; margin: 10px;
     }
-    .selected {
-      background-color: #4CAF50;
-      color: white;
-    }
-    table {
-      margin: 20px auto;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #999;
-      padding: 8px 16px;
-    }
-    #back-button {
-      margin-top: 20px;
-    }
+    .selected { background-color: #4CAF50; color: white; }
+    table { margin: 20px auto; border-collapse: collapse; }
+    th, td { border: 1px solid #999; padding: 8px 16px; }
     .user-buttons button, .grade-buttons button, .mode-buttons button {
-      padding: 10px 15px;
-      font-size: 16px;
-      margin: 5px;
+      padding: 10px 15px; font-size: 16px; margin: 5px;
     }
   </style>
 </head>
@@ -96,7 +69,7 @@
       </thead>
       <tbody id="results"></tbody>
     </table>
-    <div id="back-button">
+    <div>
       <button onclick="resetGame()">スタート画面に戻る</button>
     </div>
   </div>
@@ -109,75 +82,179 @@
       </thead>
       <tbody id="history-body"></tbody>
     </table>
-    <div id="back-button">
+    <div>
       <button onclick="resetGame()">スタート画面に戻る</button>
     </div>
   </div>
 
   <script>
-    let selectedGrade = '小1';
     let selectedUser = 'はると';
-    let selectedMode = 'math';
+let selectedGrade = '小1';
+let selectedMode = 'math';
+let current = 0;
+let questions = [];
+let results = [];
+let timeElapsed = 0;
+let startTime;
+let timerInterval;
 
-    function selectGrade(grade) {
-      selectedGrade = grade;
-      document.querySelectorAll('.grade-buttons button').forEach(btn => btn.classList.remove('selected'));
-      document.getElementById(`grade-${grade}`).classList.add('selected');
-    }
+const fakeYomis = ['そら', 'みず', 'いぬ', 'ねこ', 'でんしゃ', 'かさ', 'ふね', 'たべもの'];
+const kanjiList = {
+  小1: [{k:'山',y:'やま'},{k:'川',y:'かわ'},{k:'人',y:'ひと'},{k:'日',y:'ひ'},{k:'月',y:'つき'},{k:'花',y:'はな'},{k:'虫',y:'むし'},{k:'犬',y:'いぬ'},{k:'赤',y:'あか'},{k:'青',y:'あお'}],
+  小2: [{k:'国',y:'くに'},{k:'時',y:'とき'},{k:'新',y:'あたらしい'},{k:'場',y:'ばしょ'},{k:'紙',y:'かみ'},{k:'音',y:'おと'},{k:'鳥',y:'とり'},{k:'草',y:'くさ'},{k:'風',y:'かぜ'},{k:'空',y:'そら'}],
+  小3: [{k:'海',y:'うみ'},{k:'道',y:'みち'},{k:'場',y:'ばしょ'},{k:'通',y:'とおる'},{k:'物',y:'もの'},{k:'体',y:'からだ'},{k:'形',y:'かたち'},{k:'計',y:'けい'},{k:'数',y:'かず'},{k:'曜',y:'よう'}],
+  小4: [{k:'愛',y:'あい'},{k:'歌',y:'うた'},{k:'旅',y:'たび'},{k:'便',y:'べん'},{k:'船',y:'ふね'},{k:'鉄',y:'てつ'},{k:'鳥',y:'とり'},{k:'皿',y:'さら'},{k:'決',y:'きめる'},{k:'思',y:'おもう'}],
+  小5: [{k:'機',y:'き'},{k:'験',y:'けん'},{k:'橋',y:'はし'},{k:'算',y:'さん'},{k:'説',y:'せつ'},{k:'農',y:'のう'},{k:'球',y:'たま'},{k:'温',y:'あたたかい'},{k:'港',y:'みなと'},{k:'緑',y:'みどり'}],
+  小6: [{k:'議',y:'ぎ'},{k:'識',y:'しき'},{k:'類',y:'るい'},{k:'鏡',y:'かがみ'},{k:'競',y:'きそう'},{k:'観',y:'みる'},{k:'験',y:'けん'},{k:'勝',y:'かつ'},{k:'敗',y:'まける'},{k:'熱',y:'あつい'}]
+};
 
-    function selectUser(user) {
-      selectedUser = user;
-      document.querySelectorAll('.user-buttons button').forEach(btn => btn.classList.remove('selected'));
-      document.getElementById(`user-${user}`).classList.add('selected');
-    }
+function selectUser(user) {
+  selectedUser = user;
+  document.querySelectorAll('.user-buttons button').forEach(b => b.classList.remove('selected'));
+  document.getElementById('user-' + user).classList.add('selected');
+}
+function selectGrade(grade) {
+  selectedGrade = grade;
+  document.querySelectorAll('.grade-buttons button').forEach(b => b.classList.remove('selected'));
+  document.getElementById('grade-' + grade).classList.add('selected');
+}
+function selectMode(mode) {
+  selectedMode = mode;
+  document.querySelectorAll('.mode-buttons button').forEach(b => b.classList.remove('selected'));
+  document.getElementById('mode-' + mode).classList.add('selected');
+}
 
-    function selectMode(mode) {
-      selectedMode = mode;
-      document.querySelectorAll('.mode-buttons button').forEach(btn => btn.classList.remove('selected'));
-      document.getElementById(`mode-${mode}`).classList.add('selected');
-    }
+function startGame() {
+  current = 0;
+  results = [];
+  timeElapsed = 0;
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('timer').style.display = 'block';
+  document.getElementById('question').style.display = 'block';
+  document.getElementById('answer-buttons').style.display = 'block';
+  document.getElementById('result-table').style.display = 'none';
+  document.getElementById('results').innerHTML = '';
 
-    function saveHistory(user, grade, correct, total, time) {
-      const key = `history-${user}`;
-      const history = JSON.parse(localStorage.getItem(key)) || [];
-      history.unshift({
-        date: new Date().toLocaleDateString(),
-        grade: grade,
-        correct: correct,
-        total: total,
-        time: `${time}秒`
+  if (selectedMode === 'kanji') {
+    const source = kanjiList[selectedGrade];
+    const mix = [];
+    for (let i = 0; i < 10; i++) {
+      const isFake = Math.random() < 0.4;
+      const pick = source[Math.floor(Math.random() * source.length)];
+      mix.push({
+        expression: pick.k,
+        shownYomi: isFake ? fakeYomis[Math.floor(Math.random() * fakeYomis.length)] : pick.y,
+        correctYomi: pick.y,
+        isCorrect: !isFake
       });
-      localStorage.setItem(key, JSON.stringify(history));
     }
+    questions = mix;
+  } else {
+    questions = generateMathQuestions(selectedGrade);
+  }
 
-    function showHistory() {
-      document.getElementById('start-screen').style.display = 'none';
-      document.getElementById('history-section').style.display = 'block';
-      document.getElementById('result-table').style.display = 'none';
-      document.getElementById('question').style.display = 'none';
-      document.getElementById('timer').style.display = 'none';
-      document.getElementById('answer-buttons').style.display = 'none';
-      const key = `history-${selectedUser}`;
-      const history = JSON.parse(localStorage.getItem(key)) || [];
-      const tbody = document.getElementById('history-body');
-      const title = document.getElementById('history-title');
-      title.textContent = `${selectedUser} の学習履歴`;
-      tbody.innerHTML = '';
-      history.forEach(r => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${r.date}</td><td>${r.grade}</td><td>${r.correct}/${r.total}</td><td>${r.time}</td>`;
-        tbody.appendChild(row);
-      });
-    }
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    timeElapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    document.getElementById('time').textContent = timeElapsed;
+  }, 100);
+  showQuestion();
+}
 
-    function resetGame() {
-      document.getElementById('start-screen').style.display = 'block';
-      document.getElementById('result-table').style.display = 'none';
-      document.getElementById('history-section').style.display = 'none';
-      document.getElementById('question').style.display = 'none';
-      document.getElementById('timer').style.display = 'none';
-      document.getElementById('answer-buttons').style.display = 'none';
-    }
+function generateMathQuestions(grade) {
+  const ops = [];
+  if (grade === '小1') ops.push('+', '-');
+  if (grade === '小2') ops.push('+', '-', '*');
+  if (grade === '小3') ops.push('+', '-', '*', '/');
+  if (['小4','小5','小6'].includes(grade)) ops.push('+', '-', '*', '/');
+
+  const max = grade === '小1' ? 20 : grade === '小2' ? 100 : grade === '小3' ? 100 : 999;
+  const qs = [];
+  while (qs.length < 10) {
+    const a = Math.floor(Math.random() * max) + 1;
+    const b = Math.floor(Math.random() * max) + 1;
+    const op = ops[Math.floor(Math.random() * ops.length)];
+    let correct = op === '+' ? a + b : op === '-' ? a - b : op === '*' ? a * b : Math.floor(a / b);
+    if (op === '/' && b === 0) continue;
+    if (op === '/' && a % b !== 0) continue;
+
+    const isCorrect = Math.random() < 0.6;
+    const shown = isCorrect ? correct : correct + Math.floor(Math.random() * 5 + 1);
+    qs.push({
+      expression: `${a} ${op} ${b}`,
+      shownYomi: shown,
+      correctYomi: correct,
+      isCorrect: isCorrect
+    });
+  }
+  return qs;
+}
+
+function showQuestion() {
+  const q = questions[current];
+  document.getElementById('question-number').textContent = `問題 ${current + 1}`;
+  document.getElementById('question-expression').textContent =
+    selectedMode === 'kanji'
+      ? `${q.expression} の読みは「${q.shownYomi}」である。`
+      : `${q.expression} = ${q.shownYomi}`;
+}
+
+function submitAnswer(userSaysTrue) {
+  const q = questions[current];
+  results.push({
+    number: current + 1,
+    expression: q.expression,
+    shown: q.shownYomi,
+    answer: q.correctYomi,
+    time: timeElapsed,
+    correct: userSaysTrue === q.isCorrect
+  });
+  current++;
+  if (current < 10) {
+    showQuestion();
+  } else {
+    endGame();
+  }
+}
+
+function endGame() {
+  clearInterval(timerInterval);
+  document.getElementById('timer').style.display = 'none';
+  document.getElementById('question').style.display = 'none';
+  document.getElementById('answer-buttons').style.display = 'none';
+  document.getElementById('result-table').style.display = 'block';
+  const tbody = document.getElementById('results');
+  results.forEach(r => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${r.number}</td><td>${r.expression} = ${r.shown}</td><td>${r.answer}</td><td>${r.time}</td><td>${r.correct ? '〇' : '×'}</td>`;
+    tbody.appendChild(row);
+  });
+}
+
+function resetGame() {
+  document.getElementById('start-screen').style.display = 'block';
+  document.getElementById('result-table').style.display = 'none';
+  document.getElementById('history-section').style.display = 'none';
+  document.getElementById('question').style.display = 'none';
+  document.getElementById('timer').style.display = 'none';
+  document.getElementById('answer-buttons').style.display = 'none';
+}
+
+function showHistory() {
+  const key = `history-${selectedUser}`;
+  const history = JSON.parse(localStorage.getItem(key)) || [];
+  const tbody = document.getElementById('history-body');
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('history-section').style.display = 'block';
+  tbody.innerHTML = '';
+  document.getElementById('history-title').textContent = `${selectedUser} の学習履歴`;
+  history.forEach(r => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${r.date}</td><td>${r.grade}</td><td>${r.correct}/${r.total}</td><td>${r.time}</td>`;
+    tbody.appendChild(row);
+  });
+}
+
   </script>
 </body>
 </html>
