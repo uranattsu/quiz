@@ -78,7 +78,7 @@
     <h2 id="history-title"></h2>
     <table>
       <thead>
-        <tr><th>日付</th><th>学年</th><th>正答数</th><th>時間</th></tr>
+        <tr><th>日付</th><th>教科</th><th>学年</th><th>正答数</th><th>時間</th></tr>
       </thead>
       <tbody id="history-body"></tbody>
     </table>
@@ -107,7 +107,19 @@ const kanjiList = {
   小5: [{k:'機',y:'き'},{k:'験',y:'けん'},{k:'橋',y:'はし'},{k:'算',y:'さん'},{k:'説',y:'せつ'},{k:'農',y:'のう'},{k:'球',y:'たま'},{k:'温',y:'あたたかい'},{k:'港',y:'みなと'},{k:'緑',y:'みどり'}],
   小6: [{k:'議',y:'ぎ'},{k:'識',y:'しき'},{k:'類',y:'るい'},{k:'鏡',y:'かがみ'},{k:'競',y:'きそう'},{k:'観',y:'みる'},{k:'験',y:'けん'},{k:'勝',y:'かつ'},{k:'敗',y:'まける'},{k:'熱',y:'あつい'}]
 };
-
+function saveHistory(user, mode, grade, correct, total, time) {
+  const key = `history-${user}`;
+  const history = JSON.parse(localStorage.getItem(key)) || [];
+  history.unshift({
+    date: new Date().toLocaleDateString(),
+    mode: mode,
+    grade: grade,
+    correct: correct,
+    total: total,
+    time: `${time}秒`
+  });
+  localStorage.setItem(key, JSON.stringify(history));
+}
 function selectUser(user) {
   selectedUser = user;
   document.querySelectorAll('.user-buttons button').forEach(b => b.classList.remove('selected'));
@@ -227,6 +239,7 @@ function endGame() {
   results.forEach(r => {
     const row = document.createElement('tr');
     row.innerHTML = `<td>${r.number}</td><td>${r.expression} = ${r.shown}</td><td>${r.answer}</td><td>${r.time}</td><td>${r.correct ? '〇' : '×'}</td>`;
+    row.innerHTML = `<td>${r.date}</td><td>${r.mode === 'kanji' ? '漢字' : '算数'}</td><td>${r.grade}</td><td>${r.correct}/${r.total}</td><td>${r.time}</td>`;
     tbody.appendChild(row);
   });
 }
@@ -254,7 +267,8 @@ function showHistory() {
     tbody.appendChild(row);
   });
 }
-
+const correctCount = results.filter(r => r.correct).length;
+saveHistory(selectedUser, selectedMode, selectedGrade, correctCount, 10, timeElapsed);
   </script>
 </body>
 </html>
